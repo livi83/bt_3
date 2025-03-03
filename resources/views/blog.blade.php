@@ -11,7 +11,9 @@
     <ul>
         @foreach($posts as $post)
             <li>
-                <h2>{{ $post['title'] }}</h2>
+                <h2>
+                    <a href="{{ url('/blog/' . $post['id']) }}">{{ $post['title'] }}</a>
+                </h2>
                 <p>{{ $post['excerpt'] }}</p>
             </li>
         @endforeach

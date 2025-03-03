@@ -6,6 +6,6 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Vítame vás vo firme {{ $nazov_firmy }}</h1>
+    <h1>Toto je {{ $blog_name }}</h1>
 </body>
 </html>
