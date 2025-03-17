@@ -15,6 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('content');
+            /*
+            - foreignID vytvori stlpec s nazvom category_id ktorého typ bude 
+            BIGINT Unsigned
+            - contrained vytvori cudzi kluc (foreign key), ktory odkazuje na 
+             primarny kluc (id) v tabulke categories.
+            - onDelete('cascade') znamena ak sa z tabuľky categories vymaže záznam, 
+            vymazu sa vsetky súvisiace zaznamy v tejto tabulke.*/
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
