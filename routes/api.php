@@ -11,19 +11,7 @@ Route::get('/user', function (Request $request) {
 
 // API routy pre PostController
 Route::resource('admin/posts', PostController::class);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//Route::get('admin/posts-with-users', [PostController::class, 'postsWithUsers']);
-//Route::get('admin/users-with-posts-count', [PostController::class, 'usersWithPostsCount']);
+//API route pre moju pridanu metodu, pretoze Route::resource vidi len predpirpravene crud metody
+Route::get('admin/posts-with-users', [PostController::class, 'postsWithUsers']);
+Route::get('admin/users-with-posts-count', [PostController::class, 'usersWithPostsCount']);
+Route::get('admin/searchPosts', [PostController::class, 'searchPosts']);

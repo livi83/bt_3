@@ -125,9 +125,6 @@ class PostController extends Controller
 
         return response()->json(['message' => 'Post bol vymazaný'], Response::HTTP_OK);
     }
-
-
-
     
     public function postsWithUsers()
     {
@@ -151,6 +148,28 @@ class PostController extends Controller
             ->get();
 
         return response()->json($users);
+    }
+
+    public function searchPosts(Request $request)
+    {
+        $query = $request->query('q');
+
+        if (empty($query)) {
+            return response()->json(['message' => 'Musíte zadať dopyt na vyhľadávanie'], 
+            Response::HTTP_BAD_REQUEST);
+        }
+
+        $posts = DB::table('posts')
+            ->where('title', 'like', '%' . $query . '%')
+            ->orWhere('content', 'like', '%' . $query . '%')
+            ->get();
+
+        if ($posts->isEmpty()) {
+            return response()->json(['message' => 'Žiadne poznámky sa nenašli'], 
+            Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json($posts);
     }
 
 
