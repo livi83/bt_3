@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //treba pridat
 use Symfony\Component\HttpFoundation\Response; //treba pridat
+use App\Models\Post;
+use App\Models\Category;
+use App\Models\Tag;
+use App\Models\User;
+
 
 class PostController extends Controller
 {
@@ -15,10 +20,10 @@ class PostController extends Controller
     public function index()
     {
         /*$posts = DB::table('posts')
-            ->orderBy('created_at', 'desc')
-            ->paginate(1);*/
+        ->orderBy('created_at', 'desc')
+        ->get();*/
 
-            $posts = DB::table('posts')
+        $posts = Post::with('user', 'category', 'tags')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -43,10 +48,13 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category_id' => 'required|integer|exists:categories,id',
-            'user_id' => 'required|integer|exists:users,id'
+            'user_id' => 'required|integer|exists:users,id',
+            //pridavame validaciu pre tagy
+            'tags' => 'array',
+            'tags.*' => 'exists:tags,id' //kazdy prvok v array tags musi existovat
         ]);
 
-        $posts = DB::table('posts')->insert([
+        $post = Post::create([
             'title' => $request->title,
             'content' => $request->content,
             'category_id' => $request->category_id,
@@ -54,8 +62,12 @@ class PostController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        if ($request->has('tags')) {
+            //$post->tags() vracia vztah, teda vrati m:n
+            $post->tags()->attach($request->tags); //attach pridava do tabuliek m:n
+        }
 
-        return $posts
+        return $post
             ? response()->json(['message' => 'Post bol vytvorený'], Response::HTTP_CREATED)
             : response()->json(['message' => 'Post nebol vytvorený'], Response::HTTP_FORBIDDEN);
     }
@@ -64,8 +76,8 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = DB::table('posts')->where('id', $id)->first();
-
+        //$post = DB::table('posts')->where('id', $id)->first();
+        $post = Post::with('user', 'category', 'tags')->find($id);
         if (!$post) {
             return response()->json(['message' => 'Post sa nenašiel'], Response::HTTP_NOT_FOUND);
         }
@@ -87,26 +99,28 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return response()->json(['message' => 'Post sa nenašiel'], Response::HTTP_NOT_FOUND);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            //sometimes = param nemusi byt vzdy pritomny
+            'category_id' => 'sometimes|exists:categories,id', 
+            'tags' => 'sometimes|array',
+            'tags.*' => 'exists:tags,id'
         ]);
+       
+        $post->update($request->only('title', 'content', 'category_id'));
 
-        $affected = DB::table('posts')
-            ->where('id', $id)
-            ->update([
-                'title' => $request->title,
-                'content' => $request->content,
-                'updated_at' => now(),
-            ]);
-
-        if (!$affected) {
-            return response()->json(['message' => 'Post sa nenašiel alebo nebol aktualizovaný'], Response::HTTP_NOT_FOUND);
+        if ($request->has('tags')) {
+            $post->tags()->sync($request->tags); //synchronizuje priradenia
         }
 
-        $updatedPost = DB::table('posts')->where('id', $id)->first();
-
-        return response()->json($updatedPost, Response::HTTP_OK);
+        return response()->json($post);
     }
 
 
@@ -115,62 +129,16 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        $post = DB::table('posts')->where('id', $id)->first();
+        $post = Post::find($id);
 
         if (!$post) {
             return response()->json(['message' => 'Post sa nenašiel'], Response::HTTP_NOT_FOUND);
         }
 
-        DB::table('posts')->where('id', $id)->delete();
+        $post->tags()->detach(); //odstrani vazbu medzi modelmi
+        $post->delete();
 
-        return response()->json(['message' => 'Post bol vymazaný'], Response::HTTP_OK);
+        return response()->json(['message' => 'Post bol vymazaný']);
     }
     
-    public function postsWithUsers()
-    {
-        $posts = DB::table('posts')
-            ->join('users', 'posts.user_id', '=', 'users.id')
-            ->select('posts.*', 'users.name as user_name')
-            ->get();
-
-        return response()->json($posts);
-    }
-
-    public function usersWithPostsCount()
-    {
-        $users = DB::table('users')
-            ->select('users.id', 'users.name')
-            ->selectSub(function ($query) {
-                $query->from('posts')
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('posts.user_id', 'users.id');
-            }, 'post_count')
-            ->get();
-
-        return response()->json($users);
-    }
-
-    public function searchPosts(Request $request)
-    {
-        $query = $request->query('q');
-
-        if (empty($query)) {
-            return response()->json(['message' => 'Musíte zadať dopyt na vyhľadávanie'], 
-            Response::HTTP_BAD_REQUEST);
-        }
-
-        $posts = DB::table('posts')
-            ->where('title', 'like', '%' . $query . '%')
-            ->orWhere('content', 'like', '%' . $query . '%')
-            ->get();
-
-        if ($posts->isEmpty()) {
-            return response()->json(['message' => 'Žiadne poznámky sa nenašli'], 
-            Response::HTTP_NOT_FOUND);
-        }
-
-        return response()->json($posts);
-    }
-
-
 }
