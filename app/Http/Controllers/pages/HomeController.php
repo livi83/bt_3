@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\pages;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post; // Nezabudni importovať model Post
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -12,6 +13,7 @@ class HomeController extends Controller
      */
     public function __invoke(Request $request)
     {
-        return view('welcome');
+        $posts = Post::latest()->paginate(6); // Načítaj najnovších 6 príspevkov s pagináciou
+        return view('welcome', compact('posts')); // Odovzdaj premennú $posts do view
     }
 }

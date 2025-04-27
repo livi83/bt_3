@@ -14,11 +14,8 @@ class PostSeeder extends Seeder
     public function run(): void
     {
         DB::table('posts')->insert([
-            ['title' => 'Prvý článok', 'content' => 'Obsah prvého článku', 
-            'user_id' => 1, 'category_id' => 1],
-            
-            ['title' => 'Druhý článok', 'content' => 'Obsah druhého článku', 
-            'user_id' => 2, 'category_id' => 2]
+            ['title' => 'Prvý článok', 'content' => 'Obsah prvého článku', 'user_id' => 1, 'category_id' => 1],
+            ['title' => 'Druhý článok', 'content' => 'Obsah druhého článku', 'user_id' => 2, 'category_id' => 2]
         ]);
     }
 }

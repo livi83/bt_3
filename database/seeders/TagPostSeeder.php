@@ -21,4 +21,3 @@ class TagPostSeeder extends Seeder
         ]);
     }
 }
-

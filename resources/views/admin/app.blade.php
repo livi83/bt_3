@@ -16,6 +16,10 @@
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ route('posts.index') }}">Posts</a>
                     </li>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-link nav-link">Odhlásiť</button>
+                    </form>
                 </ul>
             </div>
         </nav>
